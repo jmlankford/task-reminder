@@ -1,0 +1,72 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Task Reminder — Home Assistant Scripts
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# HOW TO INSTALL
+# ──────────────
+# Option A (UI): Settings → Scripts → + Add Script → ⋮ → Edit in YAML
+#   Paste the content of the script block (everything under the script's key).
+#   Give it alias "Task Reminder — Amber Pulse".
+#
+# Option B (file-based): If configuration.yaml has `script: !include scripts.yaml`
+#   paste this file as-is.
+#
+# ABOUT THE PULSE EFFECT
+# ──────────────────────
+# Elkbledom is a generic BLE controller — it does not support native lighting
+# effects, so the pulse is scripted: amber at full brightness → dim → full,
+# on a 2-second cycle. The script loops while input_boolean.task_reminder_light_pulse
+# is "on". The Light Off automation turns that boolean off and calls
+# script.turn_off to halt the loop immediately.
+#
+# Amber RGB: (255, 165, 0) — adjust to taste.
+# ══════════════════════════════════════════════════════════════════════════════
+
+task_reminder_amber_pulse:
+  alias: "Task Reminder — Studio Amber Pulse"
+  description: >
+    Loops the studio light bar between dim and bright amber until
+    input_boolean.task_reminder_light_pulse is turned off.
+  mode: restart   # restart if triggered again while already running
+  sequence:
+
+    # Initial state: amber at full brightness
+    - service: light.turn_on
+      target:
+        entity_id: light.studio_light_bar
+      data:
+        rgb_color: [255, 165, 0]
+        brightness: 220
+
+    - delay:
+        seconds: 1
+
+    # Pulse loop — runs until the boolean is cleared by the Light Off automation
+    - repeat:
+        while:
+          - condition: state
+            entity_id: input_boolean.task_reminder_light_pulse
+            state: "on"
+        sequence:
+
+          # Dim phase
+          - service: light.turn_on
+            target:
+              entity_id: light.studio_light_bar
+            data:
+              rgb_color: [255, 165, 0]
+              brightness: 35
+
+          - delay:
+              seconds: 2
+
+          # Bright phase
+          - service: light.turn_on
+            target:
+              entity_id: light.studio_light_bar
+            data:
+              rgb_color: [255, 165, 0]
+              brightness: 220
+
+          - delay:
+              seconds: 2

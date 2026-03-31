@@ -1,0 +1,161 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Task Reminder — Home Assistant Automations
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# HOW TO INSTALL
+# ──────────────
+# Option A (recommended — UI import):
+#   For each automation below: Settings → Automations → + Create Automation →
+#   ⋮ (top-right menu) → Edit in YAML → paste the block → Save.
+#
+# Option B (file-based):
+#   If your configuration.yaml uses `automation: !include automations.yaml`,
+#   paste these blocks into that file (omit the `automation:` wrapper — HA
+#   adds it automatically for the list).
+#
+# PREREQUISITES
+# ─────────────
+#   • configuration_additions.yaml applied (rest_command + input_boolean)
+#   • scripts.yaml applied (studio_amber_pulse script)
+#   • HACS Alexa Media Player installed and bath_echo visible as
+#     media_player.bath_echo
+#   • secrets.yaml entry:  task_reminder_ha_api_key: your-key-here
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+# ── 1. Evening Presence Check → Flask ─────────────────────────────────────────
+#
+# Fires every 30 minutes between 19:30 and 23:00.
+# Checks your phone is home, then POSTs to the Flask app which sends a
+# Telegram summary of active reminders.
+#
+# LAPTOP PING (optional):
+#   To also require your laptop to be online:
+#   1. Go to Settings → Devices & Services → Add Integration → search "Ping"
+#   2. Host: your laptop's local IP (set a static DHCP reservation first)
+#   3. Uncomment the condition block labelled "laptop ping" below.
+
+- id: task_reminder_presence_check
+  alias: "Task Reminder — Evening Presence Check"
+  description: >
+    Every 30 minutes in the evening, if phone is home, ping the Flask app to
+    send a Telegram reminder summary.
+  trigger:
+    - platform: time_pattern
+      minutes: "/30"
+  condition:
+    - condition: time
+      after: "19:30:00"
+      before: "23:00:00"
+    - condition: state
+      entity_id: device_tracker.cph2655
+      state: "home"
+    # ── Laptop ping (uncomment after adding the Ping integration) ─────────────
+    # - condition: state
+    #   entity_id: binary_sensor.YOUR_LAPTOP_PING_ENTITY
+    #   state: "on"
+  action:
+    - service: rest_command.task_reminder_check
+  mode: single
+
+
+# ── 2. Light On — Amber Slow Pulse ────────────────────────────────────────────
+#
+# Webhook URL (HA receives this call from your Flask app):
+#   POST http://192.168.1.165:8123/api/webhook/task-reminder-light-on
+#
+# Sets input_boolean so the pulse script knows to keep looping, then
+# launches the amber pulse script.
+
+- id: task_reminder_light_on
+  alias: "Task Reminder — Studio Light On (Amber Pulse)"
+  description: "Webhook from Flask — starts amber slow pulse on studio light bar."
+  trigger:
+    - platform: webhook
+      webhook_id: task-reminder-light-on
+      allowed_methods:
+        - POST
+        - GET
+  action:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.task_reminder_light_pulse
+    - service: script.turn_on
+      target:
+        entity_id: script.task_reminder_amber_pulse
+  mode: single
+
+
+# ── 3. Light Off ───────────────────────────────────────────────────────────────
+#
+# Webhook URL:
+#   POST http://192.168.1.165:8123/api/webhook/task-reminder-light-off
+#
+# Turns off the input_boolean (stops the pulse loop on next iteration),
+# stops the script immediately, waits a moment, then turns the light off.
+
+- id: task_reminder_light_off
+  alias: "Task Reminder — Studio Light Off"
+  description: "Webhook from Flask — stops amber pulse and turns off studio light bar."
+  trigger:
+    - platform: webhook
+      webhook_id: task-reminder-light-off
+      allowed_methods:
+        - POST
+        - GET
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.task_reminder_light_pulse
+    - service: script.turn_off
+      target:
+        entity_id: script.task_reminder_amber_pulse
+    - delay:
+        milliseconds: 300
+    - service: light.turn_off
+      target:
+        entity_id: light.studio_light_bar
+  mode: single
+
+
+# ── 4. Alexa Announce ──────────────────────────────────────────────────────────
+#
+# Webhook URL (supports both GET and POST):
+#   GET  http://192.168.1.165:8123/api/webhook/task-reminder-announce?message=Hello+there
+#   POST http://192.168.1.165:8123/api/webhook/task-reminder-announce
+#        body: {"message": "Hello there"}
+#
+# Requires: HACS Alexa Media Player installed.
+# The notify service name is alexa_media_bath_echo — if yours differs,
+# find it at Developer Tools → Services → search "notify.alexa".
+#
+# announce type: interrupts current playback, speaks, then resumes.
+# tts type:      queued TTS, does not interrupt.
+
+- id: task_reminder_alexa_announce
+  alias: "Task Reminder — Alexa Announce"
+  description: "Webhook from Flask — speaks a message through the bath Echo."
+  trigger:
+    - platform: webhook
+      webhook_id: task-reminder-announce
+      allowed_methods:
+        - POST
+        - GET
+  variables:
+    # Try query string first (?message=…), fall back to JSON body
+    message: >-
+      {{ trigger.query.message
+         | default(trigger.json.message
+         | default(trigger.data.message
+         | default(''))) }}
+  condition:
+    - condition: template
+      value_template: "{{ message | length > 0 }}"
+  action:
+    - service: notify.alexa_media_bath_echo
+      data:
+        message: "{{ message }}"
+        data:
+          type: announce
+  mode: queued
+  max: 5

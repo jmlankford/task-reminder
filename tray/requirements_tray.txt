@@ -1,0 +1,11 @@
+# Task Reminder — Windows tray client dependencies
+# Install with:  pip install -r requirements_tray.txt
+
+plyer>=2.1.0        # Windows toast notifications
+pystray>=0.19.5     # System tray icon + menu
+Pillow>=10.0.0      # Icon image generation
+pytz>=2024.1        # Timezone handling
+
+# Optional — uncomment if you want click-to-open-web-UI on toast notifications
+# (swap the _fire_toast() implementation in taskreminder_tray.py as instructed)
+# winotify>=1.1.0

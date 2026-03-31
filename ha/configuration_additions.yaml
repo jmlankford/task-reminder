@@ -1,0 +1,75 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Task Reminder — Additions to configuration.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# These blocks must be added to your main configuration.yaml (or an included
+# file). After adding them, restart Home Assistant.
+#
+# STEP 1 — Add to secrets.yaml
+# ─────────────────────────────
+# Open your secrets.yaml and add:
+#
+#   task_reminder_ha_api_key: replace-this-with-a-long-random-string
+#
+# Use the same value as HA_API_KEY in your Flask .env / docker-compose.
+#
+# STEP 2 — Add the rest_command block to configuration.yaml
+# ──────────────────────────────────────────────────────────
+# Replace YOUR_FLASK_SERVER_IP with your server's local IP (e.g. 192.168.1.50).
+# If your Flask app runs on a non-standard port, adjust accordingly.
+
+rest_command:
+  task_reminder_check:
+    url: "http://YOUR_FLASK_SERVER_IP:5000/ha/trigger-check"
+    method: POST
+    headers:
+      X-API-Key: !secret task_reminder_ha_api_key
+      Content-Type: application/json
+    payload: "{}"
+    timeout: 15
+
+
+# STEP 3 — Add the input_boolean helper
+# ──────────────────────────────────────
+# Option A (easier — UI):
+#   Settings → Helpers → + Add Helper → Toggle
+#   Name:      Task Reminder Light Pulse
+#   Entity ID: input_boolean.task_reminder_light_pulse   ← must match exactly
+#   Icon:      mdi:pulse
+#   Save, then restart is NOT required.
+#
+# Option B (file-based — add this block to configuration.yaml):
+
+input_boolean:
+  task_reminder_light_pulse:
+    name: "Task Reminder Light Pulse Active"
+    icon: mdi:pulse
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ALEXA MEDIA PLAYER — HACS INSTALL GUIDE
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# 1. In HA: HACS → Integrations → search "Alexa Media Player" → Download
+# 2. Restart Home Assistant.
+# 3. Settings → Devices & Services → Add Integration → search "Alexa Media Player"
+# 4. Sign in with your Amazon account.
+# 5. Your Echo devices appear as media_player entities (e.g. media_player.bath_echo).
+# 6. A notify service is created automatically:
+#      notify.alexa_media_bath_echo
+#    Verify the exact name at:
+#      Developer Tools → Services → search "alexa" in the service dropdown.
+#
+# NOTE: Amazon occasionally breaks this integration after updates. If announce
+# stops working, check the Alexa Media Player GitHub for known issues.
+#
+# ══════════════════════════════════════════════════════════════════════════════
+# LAPTOP PING SENSOR — OPTIONAL SETUP
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# 1. Give your laptop a static IP (set a DHCP reservation in your router).
+# 2. Settings → Devices & Services → Add Integration → search "Ping (ICMP)"
+# 3. Host: your laptop's static IP    Name: Laptop
+# 4. This creates binary_sensor.laptop (or similar).
+# 5. Uncomment the laptop condition in automations.yaml and update the entity ID.
+# ══════════════════════════════════════════════════════════════════════════════

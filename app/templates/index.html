@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Reminders</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <h1 class="app-title">Task Reminders</h1>
+    <div class="header-controls">
+      <button id="btn-view" class="icon-btn" title="Toggle card / list view">
+        <span id="view-icon">⊞</span>
+      </button>
+      <button id="btn-theme" class="icon-btn" title="Toggle dark / light mode">
+        <span id="theme-icon">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button id="btn-add" class="btn btn-accent">+ New</button>
+        <button id="btn-filter-toggle" class="btn btn-ghost">
+          <span id="filter-toggle-label">▼ Filters</span>
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <span id="active-count" class="active-count">— / — active</span>
+      </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div id="filter-panel" class="filter-panel collapsed">
+      <div class="filter-panel-inner">
+
+        <div class="filter-row">
+          <!-- Status checkboxes -->
+          <div class="filter-group">
+            <span class="filter-label">Status</span>
+            <div class="status-checkboxes" id="status-checkboxes">
+              <!-- built by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row filter-dates">
+          <!-- Due Date -->
+          <div class="filter-group">
+            <span class="filter-label">Due Date</span>
+            <div class="date-filter" data-field="due_date">
+              <select class="filter-op input-sm">
+                <option value="">Any</option>
+                <option value="before">Before</option>
+                <option value="after">After</option>
+                <option value="between">Between</option>
+              </select>
+              <input type="datetime-local" class="filter-date1 input-sm" style="display:none">
+              <span class="filter-and" style="display:none">and</span>
+              <input type="datetime-local" class="filter-date2 input-sm" style="display:none">
+            </div>
+          </div>
+
+          <!-- Active Start -->
+          <div class="filter-group">
+            <span class="filter-label">Active Start</span>
+            <div class="date-filter" data-field="active_start_hour">
+              <select class="filter-op input-sm">
+                <option value="">Any</option>
+                <option value="before">Before</option>
+                <option value="after">After</option>
+                <option value="between">Between</option>
+              </select>
+              <input type="datetime-local" class="filter-date1 input-sm" style="display:none">
+              <span class="filter-and" style="display:none">and</span>
+              <input type="datetime-local" class="filter-date2 input-sm" style="display:none">
+            </div>
+          </div>
+
+          <!-- Active End -->
+          <div class="filter-group">
+            <span class="filter-label">Active End</span>
+            <div class="date-filter" data-field="active_end_hour">
+              <select class="filter-op input-sm">
+                <option value="">Any</option>
+                <option value="before">Before</option>
+                <option value="after">After</option>
+                <option value="between">Between</option>
+              </select>
+              <input type="datetime-local" class="filter-date1 input-sm" style="display:none">
+              <span class="filter-and" style="display:none">and</span>
+              <input type="datetime-local" class="filter-date2 input-sm" style="display:none">
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button id="btn-filter-clear" class="btn btn-ghost btn-sm">Clear Filters</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Reminders container (cards or table rendered by JS) -->
+    <div id="reminders-container"></div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="empty-state" style="display:none">
+      <p>No reminders match the current filters.</p>
+      <button class="btn btn-ghost btn-sm" id="btn-empty-add">+ Add one</button>
+    </div>
+
+    <!-- Settings accordion -->
+    <details id="settings-section" class="settings-section">
+      <summary class="settings-toggle">⚙ Settings</summary>
+      <div class="settings-body">
+        <div class="setting-row">
+          <label for="max-active-input" class="setting-label">Max Active Reminders</label>
+          <div class="setting-control">
+            <input type="number" id="max-active-input" min="1" max="100" class="input input-narrow">
+            <button id="btn-save-settings" class="btn btn-accent btn-sm">Save</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </main>
+
+  <!-- ── Add / Edit Modal ────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal" id="modal">
+
+      <div class="modal-header">
+        <h2 id="modal-title">New Reminder</h2>
+        <button id="btn-modal-close" class="icon-btn" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="reminder-form" autocomplete="off" novalidate>
+
+          <div class="form-group">
+            <label for="f-title">Title <span class="required">*</span></label>
+            <input type="text" id="f-title" class="input" placeholder="What needs to be done?" maxlength="500">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-priority">Priority</label>
+              <select id="f-priority" class="input">
+                <option value="1">1 — Low</option>
+                <option value="2">2</option>
+                <option value="3" selected>3 — Medium</option>
+                <option value="4">4</option>
+                <option value="5">5 — High</option>
+              </select>
+            </div>
+            <div class="form-group edit-only" style="display:none">
+              <label for="f-status">Status</label>
+              <select id="f-status" class="input">
+                <option value="active">active</option>
+                <option value="snoozed">snoozed</option>
+                <option value="inactive">inactive</option>
+                <option value="scheduled">scheduled</option>
+                <option value="done">done</option>
+                <option value="inactive_passed">inactive_passed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-start">Active Start <span class="field-hint">(blank = now)</span></label>
+              <input type="datetime-local" id="f-start" class="input">
+            </div>
+            <div class="form-group">
+              <label for="f-end">Active End</label>
+              <input type="datetime-local" id="f-end" class="input">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-due">Due Date</label>
+              <input type="datetime-local" id="f-due" class="input">
+            </div>
+            <div class="form-group">
+              <label for="f-remind">Remind At <span class="field-hint">(blank = 7:30 am/pm only)</span></label>
+              <input type="datetime-local" id="f-remind" class="input">
+            </div>
+          </div>
+
+          <div class="form-row edit-only" style="display:none">
+            <div class="form-group">
+              <label for="f-snooze">Snooze Until</label>
+              <input type="datetime-local" id="f-snooze" class="input">
+            </div>
+          </div>
+
+          <div class="form-group edit-only" style="display:none">
+            <label for="f-source">Source</label>
+            <input type="text" id="f-source" class="input input-muted">
+          </div>
+
+          <div class="form-group">
+            <label for="f-notes">Notes / Details</label>
+            <textarea id="f-notes" class="input textarea" placeholder="Optional notes or details…" rows="4"></textarea>
+          </div>
+
+          <div class="form-group edit-only" style="display:none">
+            <label class="field-meta-label">Created</label>
+            <p id="f-created" class="field-meta-value"></p>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="btn-modal-cancel" class="btn btn-ghost">Cancel</button>
+            <button type="submit" class="btn btn-accent">Save</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

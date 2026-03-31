@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  taskreminder:
+    build: .
+    container_name: taskreminder
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - /mnt/user/appdata/taskreminder:/data
+    environment:
+      # ── Core ──────────────────────────────────────────────────────────────
+      - DATABASE_PATH=/data/taskreminder.db
+      - TZ=America/New_York
+
+      # ── Telegram bot ───────────────────────────────────────────────────────
+      # Uncomment and fill in to enable the Telegram bot
+      #- TELEGRAM_BOT_TOKEN=your-bot-token-here
+      #- TELEGRAM_ALLOWED_IDS=123456789,987654321
+      #- TELEGRAM_CHAT_ID=123456789
+
+      # ── Home Assistant webhook ─────────────────────────────────────────────
+      #- TELEGRAM_NOTIFY_API_KEY=change-me-to-a-long-random-string
+      #- TELEGRAM_NOTIFY_COOLDOWN_HOURS=4
+
+      # ── Google Calendar sync ───────────────────────────────────────────────
+      # Drop your service-account JSON into /mnt/user/appdata/taskreminder/
+      # then set the path here and share your calendar with the client_email.
+      #- GCAL_SERVICE_ACCOUNT_JSON=/data/gcal_service_account.json
+      #- GCAL_CALENDAR_IDS=primary
+      #- GCAL_LOOKAHEAD_HOURS=24
+      #- GCAL_API_KEY=change-me-to-a-long-random-string
+
+      # ── Receipt printer ────────────────────────────────────────────────────
+      # Set RECEIPT_PRINTER_IP to enable scheduled and on-demand receipt printing.
+      #- RECEIPT_PRINTER_IP=192.168.1.100
+      #- RECEIPT_PRINTER_PORT=9100
+      #- RECEIPT_MORNING_TIME=07:30
+      #- RECEIPT_EVENING_TIME=19:30
+      #- RECEIPT_FOOTER_TEXT=Task Reminder
+
+      # ── Home Assistant integration ─────────────────────────────────────────
+      #- HA_API_KEY=change-me-to-a-long-random-string
+      #- HA_WEBHOOK_BASE_URL=http://192.168.1.165:8123
+      #- HA_LIGHT_ON_WEBHOOK_ID=task-reminder-light-on
+      #- HA_LIGHT_OFF_WEBHOOK_ID=task-reminder-light-off
+      #- HA_ANNOUNCE_WEBHOOK_ID=task-reminder-announce
