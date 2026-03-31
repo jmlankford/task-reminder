@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   taskreminder:
-    build: .
+    image: ghcr.io/jmlankford/task-reminder:latest
+    # For local development, comment the image line above and uncomment below:
+    # build: .
     container_name: taskreminder
     restart: unless-stopped
     ports:
