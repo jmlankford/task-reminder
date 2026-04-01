@@ -64,6 +64,26 @@ def init_scheduler(app):
     else:
         logger.info("RECEIPT_PRINTER_IP not set — receipt print jobs disabled.")
 
+    # Daily Alexa summary — only when HA webhook is configured
+    if os.environ.get("HA_WEBHOOK_BASE_URL") and os.environ.get("ALEXA_DAILY_SUMMARY_ENABLED", "").lower() in ("1", "true", "yes"):
+        summary_h, summary_m = _parse_hm("ALEXA_DAILY_SUMMARY_TIME", "08:00")
+        scheduler.add_job(
+            func=lambda: _run_daily_summary(app),
+            trigger="cron",
+            hour=summary_h,
+            minute=summary_m,
+            timezone="America/New_York",
+            id="alexa_daily_summary",
+            replace_existing=True,
+            misfire_grace_time=300,
+        )
+        logger.info(
+            "Alexa daily summary scheduled at %02d:%02d NY time.",
+            summary_h, summary_m,
+        )
+    else:
+        logger.info("Alexa daily summary disabled (set ALEXA_DAILY_SUMMARY_ENABLED=true to enable).")
+
     scheduler.start()
     logger.info("Background scheduler started (60s interval).")
     return scheduler
@@ -167,3 +187,12 @@ def _run_gcal_sync(app):
         run_sync(flask_app=app)
     except Exception:
         logger.exception("Error during GCal sync job")
+
+
+def _run_daily_summary(app) -> None:
+    """Wrapper for the daily Alexa summary job."""
+    try:
+        from .routes.alexa import run_daily_summary
+        run_daily_summary(flask_app=app)
+    except Exception:
+        logger.exception("Error during Alexa daily summary job")

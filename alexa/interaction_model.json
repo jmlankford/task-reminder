@@ -1,0 +1,159 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "task reminder",
+      "intents": [
+        {
+          "name": "AddTaskIntent",
+          "description": "Add a new task with a title and due date. Start hour and priority are optional.",
+          "slots": [
+            { "name": "title",      "type": "AMAZON.SearchQuery" },
+            { "name": "due_date",   "type": "AMAZON.DATE" },
+            { "name": "start_hour", "type": "AMAZON.TIME" },
+            { "name": "priority",   "type": "AMAZON.NUMBER" }
+          ],
+          "samples": [
+            "add {title}",
+            "add {title} due {due_date}",
+            "add task {title}",
+            "add task {title} due {due_date}",
+            "add {title} starting at {start_hour} and due {due_date}",
+            "add {title} to start at {start_hour} and due {due_date}",
+            "add {title} due {due_date} starting at {start_hour}",
+            "add {title} due {due_date} priority {priority}",
+            "create task {title}",
+            "create task {title} due {due_date}",
+            "new task {title}",
+            "new task {title} due {due_date}",
+            "add a reminder for {title}",
+            "add a reminder for {title} due {due_date}",
+            "add {title} with priority {priority} due {due_date}"
+          ]
+        },
+        {
+          "name": "SnoozeTaskIntent",
+          "description": "Snooze a task by title or number for a duration or until a date/time.",
+          "slots": [
+            { "name": "title",             "type": "AMAZON.SearchQuery" },
+            { "name": "task_number",       "type": "AMAZON.NUMBER" },
+            { "name": "snooze_duration",   "type": "AMAZON.DURATION" },
+            { "name": "snooze_until_date", "type": "AMAZON.DATE" },
+            { "name": "snooze_until_time", "type": "AMAZON.TIME" }
+          ],
+          "samples": [
+            "snooze {title}",
+            "snooze task {task_number}",
+            "snooze {title} for {snooze_duration}",
+            "snooze {title} until {snooze_until_date}",
+            "snooze {title} until {snooze_until_time}",
+            "snooze {title} until {snooze_until_date} at {snooze_until_time}",
+            "snooze task {task_number} for {snooze_duration}",
+            "snooze task {task_number} until {snooze_until_date}",
+            "delay {title} for {snooze_duration}",
+            "delay {title} until {snooze_until_date}",
+            "push back {title}",
+            "put {title} on hold",
+            "hold {title} for {snooze_duration}",
+            "remind me about {title} later",
+            "skip {title} for {snooze_duration}"
+          ]
+        },
+        {
+          "name": "RemindAtIntent",
+          "description": "Set a specific remind_at time on an existing task.",
+          "slots": [
+            { "name": "title",       "type": "AMAZON.SearchQuery" },
+            { "name": "task_number", "type": "AMAZON.NUMBER" },
+            { "name": "remind_time", "type": "AMAZON.TIME" },
+            { "name": "remind_date", "type": "AMAZON.DATE" }
+          ],
+          "samples": [
+            "remind me at {remind_time} to {title}",
+            "remind me about {title} at {remind_time}",
+            "remind me at {remind_time} about {title}",
+            "remind me at {remind_time} to task {task_number}",
+            "remind me at {remind_time} on {remind_date} about {title}",
+            "remind me on {remind_date} at {remind_time} to {title}",
+            "set a reminder for {title} at {remind_time}",
+            "set a reminder at {remind_time} for {title}",
+            "alert me at {remind_time} about {title}",
+            "ping me at {remind_time} for {title}"
+          ]
+        },
+        {
+          "name": "DeleteTaskIntent",
+          "description": "Delete (soft-delete) a task by title or number.",
+          "slots": [
+            { "name": "title",       "type": "AMAZON.SearchQuery" },
+            { "name": "task_number", "type": "AMAZON.NUMBER" }
+          ],
+          "samples": [
+            "delete {title}",
+            "delete task {task_number}",
+            "remove {title}",
+            "remove task {task_number}",
+            "get rid of {title}",
+            "cancel {title}",
+            "cancel task {task_number}",
+            "erase {title}",
+            "drop {title}"
+          ]
+        },
+        {
+          "name": "MarkDoneIntent",
+          "description": "Mark a task as completed by title or number.",
+          "slots": [
+            { "name": "title",       "type": "AMAZON.SearchQuery" },
+            { "name": "task_number", "type": "AMAZON.NUMBER" }
+          ],
+          "samples": [
+            "mark {title} as done",
+            "mark {title} done",
+            "mark task {task_number} as done",
+            "mark task {task_number} done",
+            "complete {title}",
+            "finish {title}",
+            "I finished {title}",
+            "I completed {title}",
+            "I'm done with {title}",
+            "check off {title}",
+            "done with {title}",
+            "I did {title}",
+            "cross off {title}"
+          ]
+        },
+        {
+          "name": "ListTasksIntent",
+          "description": "Read out the current active task list.",
+          "slots": [],
+          "samples": [
+            "list my tasks",
+            "list tasks",
+            "what are my tasks",
+            "what's on my list",
+            "read my tasks",
+            "read off my tasks",
+            "show my tasks",
+            "what do I have",
+            "what tasks do I have",
+            "what's pending",
+            "give me my task list",
+            "read me my reminders"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        }
+      ]
+    }
+  }
+}

@@ -26,6 +26,7 @@ def create_app():
     from .routes.gcal import gcal_bp
     from .routes.receipt import receipt_bp
     from .routes.ha import ha_bp
+    from .routes.alexa import alexa_bp
 
     app.register_blueprint(reminders_bp)
     app.register_blueprint(config_bp)
@@ -33,6 +34,7 @@ def create_app():
     app.register_blueprint(gcal_bp)
     app.register_blueprint(receipt_bp)
     app.register_blueprint(ha_bp)
+    app.register_blueprint(alexa_bp)
 
     @app.route("/")
     def index():
@@ -62,6 +64,7 @@ def _run_migrations():
             ("last_notified_at", "DATETIME"),
             ("gcal_event_id",    "VARCHAR(255)"),
             ("remind_at",        "DATETIME"),
+            ("source",           "VARCHAR(100) DEFAULT 'manual'"),
         ]:
             try:
                 conn.execute(text(f"ALTER TABLE reminders ADD COLUMN {col} {definition}"))
