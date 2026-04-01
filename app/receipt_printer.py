@@ -158,7 +158,8 @@ def _attempt_print(lines: list[tuple[str, dict]]) -> None:
     host = _cfg("RECEIPT_PRINTER_IP")
     port = int(_cfg("RECEIPT_PRINTER_PORT", "9100"))
 
-    with Network(host, port) as p:
+    p = Network(host, port)
+    try:
         prev_state: dict | None = None
         for text, state in lines:
             if state != prev_state:
@@ -166,6 +167,11 @@ def _attempt_print(lines: list[tuple[str, dict]]) -> None:
                 prev_state = state
             p.text(text)
         p.cut()
+    finally:
+        try:
+            p.close()
+        except Exception:
+            pass
 
 
 def _notify_telegram_error(err: Exception) -> None:
