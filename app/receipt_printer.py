@@ -38,12 +38,11 @@ def _cfg(key: str, default: str = "") -> str:
 
 def _stars(priority: int) -> str:
     """
-    5-char block-fill priority bar.
-    Uses cp437 block elements so they render on any thermal printer:
-      █ = FULL BLOCK (cp437 219)  ░ = LIGHT SHADE (cp437 176)
+    5-char ASCII priority bar.  e.g. priority 3 → [***--]
+    Uses plain ASCII only to avoid code-page issues on thermal printers.
     """
     priority = max(1, min(5, priority))
-    return "\u2588" * priority + "\u2591" * (5 - priority)
+    return "[" + "*" * priority + "-" * (5 - priority) + "]"
 
 
 def _fmt_date(dt: datetime | None) -> str | None:
@@ -55,8 +54,8 @@ def _fmt_date(dt: datetime | None) -> str | None:
     return ny_dt.strftime("%a %b %d").replace(" 0", " ").replace("  ", " ").strip()
 
 
-def _divider(char: str = "\u2550") -> str:
-    """Full-width divider line (no newline)."""
+def _divider(char: str = "=") -> str:
+    """Full-width divider line (no newline). ASCII only."""
     return char * LINE_WIDTH
 
 
@@ -86,7 +85,7 @@ def _build_lines(reminders: list, is_morning: bool) -> list[tuple[str, dict]]:
     footer_text = _cfg("RECEIPT_FOOTER_TEXT", "Task Reminder")
 
     # \xb7 = MIDDLE DOT (cp437 183) — safe separator in footer
-    footer_stamp = f"Printed: {time_str}  \xb7  {date_short}"
+    footer_stamp = f"Printed: {time_str}  |  {date_short}"
 
     lines: list[tuple[str, dict]] = []
 
@@ -96,10 +95,10 @@ def _build_lines(reminders: list, is_morning: bool) -> list[tuple[str, dict]]:
     # ── Header ────────────────────────────────────────────────────────────────
     add("\n")
     add("TASK REMINDER\n", align="center", bold=True, width=2, height=2)
-    add(_divider("\u2550") + "\n")          # ════...════
+    add(_divider("=") + "\n")
     add(greeting + "\n",   align="center", bold=True)
     add(date_long + "\n",  align="center")
-    add(_divider("\u2550") + "\n")
+    add(_divider("=") + "\n")
     add("\n")
 
     # ── Body ──────────────────────────────────────────────────────────────────
@@ -117,7 +116,7 @@ def _build_lines(reminders: list, is_morning: bool) -> list[tuple[str, dict]]:
             # Item line: "NN. <title padded to fill> <blocks>"
             # prefix = " N. " = 4 chars (right-justified index in 2 chars + ". ")
             prefix   = f"{i:>2}. "
-            blocks   = _stars(r.priority)   # 5 chars
+            blocks   = _stars(r.priority)   # 7 chars e.g. [***--]
             sep      = " "                  # 1 char between title and blocks
             title_w  = LINE_WIDTH - len(prefix) - len(sep) - len(blocks)
             title    = r.title
@@ -140,10 +139,10 @@ def _build_lines(reminders: list, is_morning: bool) -> list[tuple[str, dict]]:
             add("\n")
 
     # ── Footer ────────────────────────────────────────────────────────────────
-    add(_divider("\u2500") + "\n")          # ────...────
+    add(_divider("-") + "\n")
     add(footer_stamp + "\n", align="center")
     add(footer_text  + "\n", align="center")
-    add(_divider("\u2550") + "\n")          # ════...════
+    add(_divider("=") + "\n")
     add("\n\n\n")                           # paper feed before cut
 
     return lines
